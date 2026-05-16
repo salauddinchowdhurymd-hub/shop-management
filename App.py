@@ -149,8 +149,8 @@ else:
             monthly = sales_df.resample('M', on='তারিখ').sum()
             st.line_chart(monthly[['ইন (টাকা)', 'আউট (টাকা)']])
 
-        # মার্কেট শেয়ার ও অন্যান্য
-        total_market_sales = 100000  # ধরে নিচ্ছি
+        # বাজারের শেয়ার
+        total_market_sales = 100000  # উদাহরণ
         market_share = (total_in / total_market_sales) * 100 if total_market_sales else 0
         st.write(f"বাজারের অংশ: {market_share:.2f}%")
         fig, ax = plt.subplots()
@@ -245,7 +245,7 @@ else:
 
     elif choice == "🏦 ওয়ালেট ও ব্যাংক ব্যালেন্স":
         st.subheader("ব্যাংক ও ওয়ালেট ব্যালেন্স")
-        st.info("এখনও এই ফিচার আরও ডাইনামিক ও সুন্দর করে সাজানো হবে।")
+        st.info("এই ফিচারটি আরও ডাইনামিক ও সুন্দর করে সাজানো হবে।")
 
     elif choice == "📝 রিপোর্ট ডাউনলোড":
         st.subheader("মাসিক রিপোর্ট ডাউনলোড করুন")

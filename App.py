@@ -1,32 +1,37 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import datetime
 import os
+import matplotlib.pyplot as plt
 
-# CSS স্টাইলিং
+# স্টাইলিং
 st.markdown("""
     <style>
-        body { background-color: #f0f2f6; font-family: Arial, sans-serif; }
-        h1, h2, h3 { color: #4CAF50; }
-        .css-1d391kg { border-radius: 10px; }
+        body { background-color: #edf2f4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        h1, h2, h3, h4 { color: #2b2d42; font-weight: 700; }
+        .sidebar .sidebar-content { background-color: #d90429; }
+        .css-1d391kg { border-radius: 15px; }
         .card {
-            background: #fff; padding: 15px; border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px;
+            background: #ffffff; padding: 20px; border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
         }
-        /* বাটন ও ইনপুটের স্টাইল */
-        .stButton>button { border-radius: 10px; }
-        /* টেবিলের জন্য স্টাইল */
-        table { width: 100%; }
+        /* Buttons styling */
+        .stButton>button { border-radius: 12px; background-color: #3b82f6; color: white; }
+        /* DataTable styling */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: center; }
     </style>
 """, unsafe_allow_html=True)
 
-# ইউজার ডেটা থাকলে লোড করুন, না থাকলে তৈরি করুন
+# ইউজার ডেটা সেটআপ
 if not os.path.exists('users.csv'):
     pd.DataFrame({'shop_name': ['দোকান১', 'দোকান২'], 'password': ['pass1', 'pass2']}).to_csv('users.csv', index=False)
 
 users_df = pd.read_csv('users.csv')
 
-# লগইন স্টেট সেটআপ
+# সেশন স্টেট
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
     st.session_state['shop_name'] = ''
@@ -53,7 +58,7 @@ def signup():
                 st.success("নতুন দোকান যোগ হয়েছে, এখন লগইন করুন")
                 st.experimental_rerun()
 
-# লগইন বা সাইনআপ
+# লগইন বা সাইনআপ অপশন
 if not st.session_state['logged_in']:
     st.sidebar.title("অ্যাকাউন্ট")
     login_option = st.sidebar.selectbox("অ্যাকাউন্ট অপশন", ["লগইন করুন", "নতুন দোকান যোগ করুন"])
@@ -79,36 +84,36 @@ if not st.session_state['logged_in']:
                 else:
                     st.error("অজানা দোকান")
 else:
-    # লগআউট
-    if st.button("লগআউট"):
+    # লগআউট বাটন
+    if st.button("লগআউট করুন"):
         st.session_state['logged_in'] = False
         st.session_state['shop_name'] = ''
         st.session_state['logo_path'] = ''
         st.experimental_rerun()
 
     shop_name = st.session_state['shop_name']
-    st.markdown(f"<h2 style='text-align:center;'>স্বাগতম, {shop_name}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:#2b2d42;'>{shop_name} এ স্বাগতম</h2>", unsafe_allow_html=True)
 
     # লোগো দেখানো
     if st.session_state.get('logo_path'):
         st.image(st.session_state['logo_path'], width=150)
 
-    # ডেটা লোড ও সেভ করার ফাংশন
-    def load_shop_data(file_name, columns):
+    # ডেটা লোড ও সংরক্ষণ
+    def load_data(file_name, columns):
         if os.path.exists(file_name):
             return pd.read_csv(file_name)
         else:
             return pd.DataFrame(columns=columns)
 
-    # ডেটা ফাইলের নাম
+    # ফাইলের নাম
     sales_file = f"{shop_name}_sales.csv"
     supplier_file = f"{shop_name}_supplier.csv"
     customer_file = f"{shop_name}_customer.csv"
 
     # ডেটা লোড
-    sales_df = load_shop_data(sales_file, ['তারিখ', 'বিবরণ', 'পেমেন্ট মেথড', 'ইন (টাকা)', 'আউট (টাকা)', 'প্রোডাক্ট'])
-    supplier_df = load_shop_data(supplier_file, ['তারিখ', 'মহাজনের নাম', 'মোট বিল', 'পরিশোধিত', 'পাওনা'])
-    customer_df = load_shop_data(customer_file, ['তারিখ', 'কাস্টমারের নাম', 'মালের দাম', 'জমা দিয়েছে', 'বাকি'])
+    sales_df = load_data(sales_file, ['তারিখ', 'বিবরণ', 'পেমেন্ট মেথড', 'ইন (টাকা)', 'আউট (টাকা)', 'প্রোডাক্ট'])
+    supplier_df = load_data(supplier_file, ['তারিখ', 'মহাজনের নাম', 'মোট বিল', 'পরিশোধিত', 'পাওনা'])
+    customer_df = load_data(customer_file, ['তারিখ', 'কাস্টমারের নাম', 'মালের দাম', 'জমা দিয়েছে', 'বাকি'])
 
     # লোগো আপলোড
     if 'logo_file' not in st.session_state:
@@ -121,7 +126,7 @@ else:
         st.session_state['logo_path'] = logo_path
         st.success("লোগো আপলোড হয়েছে!")
 
-    # --- সাইডবার মেনু ---
+    # --- মেনু ---
     menu = [
         "📊 ড্যাশবোর্ড",
         "💰 দৈনন্দিন লেনদেন",
@@ -133,79 +138,83 @@ else:
     ]
     choice = st.sidebar.selectbox("মেনু সিলেক্ট করুন", menu)
 
-    # --- ড্যাশবোর্ড ---
+    # ড্যাশবোর্ড
     if choice == "📊 ড্যাশবোর্ড":
-        st.subheader("দোকানের সার্বিক অবস্থা")
-        total_cash_in = sales_df['ইন (টাকা)'].sum()
-        total_cash_out = sales_df['আউট (টাকা)'].sum()
-        net_cash = total_cash_in - total_cash_out
-        total_supplier_due = supplier_df['পাওনা'].sum()
-        total_customer_due = customer_df['বাকি'].sum()
+        st.subheader("সার্বিক অবস্থা")
+        total_in = float(sales_df['ইন (টাকা)'].sum())
+        total_out = float(sales_df['আউট (টাকা)'].sum())
+        net_cash = total_in - total_out
+        total_supplier_due = float(supplier_df['পাওনা'].sum())
+        total_customer_due = float(customer_df['বাকি'].sum())
 
-        total_sales = sales_df['ইন (টাকা)'].sum()
-        total_expenses = sales_df['আউট (টাকা)'].sum()
+        total_sales = total_in
+        total_expenses = total_out
         profit_loss = total_sales - total_expenses
 
-        total_market_sales = 100000  # ধরুন মোট মার্কেটের বিক্রি
-        user_sales = total_sales
-        market_share = (user_sales / total_market_sales) * 100
+        total_market_sales = 100000  # ধরুন
+        market_share = (total_sales / total_market_sales) * 100
 
-        # লাভ-লোকসান রঙিন
+        # লাভ লোকসান
         if profit_loss >= 0:
-            color = "green"
-            result_text = f"আরে বাহ! লাভ হয়েছে: {profit_loss} টাকা"
+            color = "#00b894"
+            result_text = f"অভিনন্দন! লাভ হয়েছে: {profit_loss:.2f} টাকা"
         else:
-            color = "red"
-            result_text = f"দুঃখের খবর, লোকসান: {abs(profit_loss)} টাকা"
+            color = "#d63031"
+            result_text = f"দুঃখের খবর, লোকসান: {abs(profit_loss):.2f} টাকা"
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("মোট ক্যাশ ইন", f"{total_cash_in} টাকা")
-        col2.metric("মোট ক্যাশ আউট", f"{total_cash_out} টাকা")
-        col3.metric("বর্তমানে হাতে আছে", f"{net_cash} টাকা")
+        col1.metric("মোট ইনকাম", f"{total_in:.2f} টাকা")
+        col2.metric("মোট আউট", f"{total_out:.2f} টাকা")
+        col3.metric("বর্তমান ক্যাশ", f"{net_cash:.2f} টাকা")
         st.markdown(f"<h3 style='color:{color}; text-align:center;'>{result_text}</h3>", unsafe_allow_html=True)
 
-        st.write(f"সাধারণ মার্কেট শেয়ার: {market_share:.2f}%")
-        st.progress(min(market_share/100, 1))
-        # জনপ্রিয় পণ্য ও ভাগ
+        # মার্কেট শেয়ার ও গ্রাফ
+        st.subheader("বাজারের অংশ")
+        st.write(f"শেয়ার: {market_share:.2f}%")
+        fig, ax = plt.subplots()
+        ax.pie([market_share, 100 - market_share], labels=["আপনি", "অন্যরা"], autopct='%1.1f%%', colors=['#0984e3', '#dfe6e9'])
+        st.pyplot(fig)
+
+        # জনপ্রিয় পণ্য
         if 'প্রোডাক্ট' in sales_df.columns:
             top_products = sales_df['প্রোডাক্ট'].value_counts().head(5)
-            st.subheader("সর্বাধিক বিক্রীত পণ্যসমূহ")
+            st.subheader("শীর্ষ পণ্যসমূহ")
             st.bar_chart(top_products)
-            st.subheader("প্রোডাক্টের ভাগ")
-            st.pie_chart(sales_df['প্রোডাক্ট'].value_counts())
 
+    # দৈনন্দিন লেনদেন
     elif choice == "💰 দৈনন্দিন লেনদেন":
-        st.subheader("নতুন ক্যাশ ইন/আউট এন্ট্রি")
+        st.subheader("নতুন লেনদেন যোগ করুন")
         with st.form("cash_form"):
             date = st.date_input("তারিখ", datetime.date.today())
             desc = st.text_input("বিবরণ")
             method = st.selectbox("মাধ্যম", ["ক্যাশ", "ব্যাংক", "বিকাশ"])
-            t_type = st.radio("ধরণ", ["টাকা আসছে (In)", "টাকা গেছে (Out)"])
-            amount = st.number_input("টাকার পরিমাণ", min_value=0)
-            if st.form_submit_button("সেভ করুন"):
+            t_type = st.radio("টাইপ", ["টাকা আসছে (In)", "টাকা যাচ্ছে (Out)"])
+            amount = st.number_input("পরিমাণ", min_value=0)
+            if st.form_submit_button("সংরক্ষণ করুন"):
                 v_in = amount if t_type == "টাকা আসছে (In)" else 0
-                v_out = amount if t_type == "টাকা গেছে (Out)" else 0
-                new_row = {
-                    'তারিখ': date,
+                v_out = amount if t_type == "টাকা যাচ্ছে (Out)" else 0
+                new_entry = {
+                    'তারিখ': str(date),
                     'বিবরণ': desc,
                     'পেমেন্ট মেথড': method,
                     'ইন (টাকা)': v_in,
                     'আউট (টাকা)': v_out,
                     'প্রোডাক্ট': desc
                 }
-                sales_df = pd.concat([sales_df, pd.DataFrame([new_row])], ignore_index=True)
+                sales_df = pd.concat([sales_df, pd.DataFrame([new_entry])], ignore_index=True)
                 sales_df.to_csv(sales_file, index=False)
-                st.success("হিসাব আপডেট হয়েছে!")
+                st.success("লেনদেন সংরক্ষিত!")
 
-        # গ্রাফ ও রিপোর্ট
+        # গ্রাফ
         if not sales_df.empty:
             sales_df['তারিখ'] = pd.to_datetime(sales_df['তারিখ'])
             monthly = sales_df.resample('M', on='তারিখ').sum()
             st.line_chart(monthly[['ইন (টাকা)', 'আউট (টাকা)']])
-            st.download_button("এক্সেল এ ডাউনলোড করুন", data=sales_df.to_csv(index=False).encode('utf-8'), file_name='sales_report.csv')
+            st.download_button("এক্সেল ডাউনলোড", data=sales_df.to_csv(index=False).encode('utf-8'), file_name="sales_report.csv")
 
+    # মহাজন/পার্টি হিসাব
     elif choice == "🤝 মহাজন/পার্টি হিসাব":
-        st.subheader("মহাজন বা পার্টির হিসাব দেখুন")
+        st.subheader("মহাজন/পার্টি হিসাব দেখুন")
         if st.button("ডেটা দেখান"):
             if not supplier_df.empty:
                 st.dataframe(supplier_df)
@@ -215,11 +224,11 @@ else:
             date = st.date_input("তারিখ", datetime.date.today())
             name = st.text_input("মহাজনের নাম")
             total_bill = st.number_input("মোট বিল", min_value=0)
-            paid = st.number_input("পরিশোধিত টাকা", min_value=0)
+            paid = st.number_input("পরিশোধিত", min_value=0)
             due = total_bill - paid
             if st.form_submit_button("সংরক্ষণ করুন"):
                 new_supplier = {
-                    'তারিখ': date,
+                    'তারিখ': str(date),
                     'মহাজনের নাম': name,
                     'মোট বিল': total_bill,
                     'পরিশোধিত': paid,
@@ -227,10 +236,11 @@ else:
                 }
                 supplier_df = pd.concat([supplier_df, pd.DataFrame([new_supplier])], ignore_index=True)
                 supplier_df.to_csv(supplier_file, index=False)
-                st.success("ডেটা সংরক্ষণ হয়েছে!")
+                st.success("ডেটা সংরক্ষিত!")
 
+    # কাস্টমার বাকি
     elif choice == "👤 কাস্টমার বাকি হিসাব":
-        st.subheader("কাস্টমার বাকি হিসাব দেখুন")
+        st.subheader("কাস্টমার বাকি দেখুন")
         if st.button("ডেটা দেখান"):
             if not customer_df.empty:
                 st.dataframe(customer_df)
@@ -243,7 +253,7 @@ else:
             total_due = st.number_input("বাকি", min_value=0)
             if st.form_submit_button("সংরক্ষণ করুন"):
                 new_customer = {
-                    'তারিখ': date,
+                    'তারিখ': str(date),
                     'কাস্টমারের নাম': name,
                     'মালের দাম': amount_paid,
                     'জমা দিয়েছে': amount_paid,
@@ -251,32 +261,32 @@ else:
                 }
                 customer_df = pd.concat([customer_df, pd.DataFrame([new_customer])], ignore_index=True)
                 customer_df.to_csv(customer_file, index=False)
-                st.success("ডেটা সংরক্ষণ হয়েছে!")
+                st.success("ডেটা সংরক্ষিত!")
 
     elif choice == "🏦 ওয়ালেট ও ব্যাংক ব্যালেন্স":
-        st.subheader("ব্যাংক অ্যাকাউন্ট ও ওয়ালেট ব্যালেন্স")
-        # এডিট বা ডিলিট অপশন যোগ করতে পারেন
+        st.subheader("ব্যাংক ও ওয়ালেট ব্যালেন্স")
+        st.info("এখনও এই ফিচার আরও ডাইনামিক ও সুন্দর করে সাজানো হবে।")
 
     elif choice == "📝 রিপোর্ট ডাউনলোড":
-        st.subheader("মাসিক রিপোর্ট ডাউনলোড")
-        month = st.selectbox("মাস নির্বাচন করুন", pd.date_range('2023-01-01', periods=12, freq='M').strftime("%B %Y"))
-        filtered = sales_df[pd.to_datetime(sales_df['তারিখ']).dt.strftime("%B %Y") == month]
+        st.subheader("মাসিক রিপোর্ট ডাউনলোড করুন")
+        months = pd.date_range('2023-01-01', periods=12, freq='MS').strftime("%B %Y")
+        selected_month = st.selectbox("মাস নির্বাচন করুন", months)
+        filtered = sales_df[pd.to_datetime(sales_df['তারিখ']).dt.strftime("%B %Y") == selected_month]
         if not filtered.empty:
-            st.download_button("এক্সেল ডাউনলোড করুন", data=filtered.to_csv(index=False).encode('utf-8'), file_name=f"{month}_report.csv")
+            st.download_button("এক্সেল ডাউনলোড করুন", data=filtered.to_csv(index=False).encode('utf-8'), file_name=f"{selected_month}_report.csv")
         else:
             st.info("কোন ডেটা পাওয়া যায়নি এই মাসের জন্য।")
 
     elif choice == "⚙️ ডেটা এডিট ও ডিলিট":
         st.subheader("ডেটা এডিট ও ডিলিট")
-        table_option = st.selectbox("কোন ডেটা দেখবেন?", ["সেল ডেটা এডিট", "রো ডিলিট"])
-        if table_option == "সেল ডেটা এডিট":
-            selected_df = sales_df.copy()
-            edited_df = st.experimental_data_editor(selected_df)
+        option = st.selectbox("অপশন", ["সেল এডিট", "রো ডিলিট"])
+        if option == "সেল এডিট":
+            edited_df = st.experimental_data_editor(sales_df)
             if st.button("সেভ করুন"):
                 edited_df.to_csv(sales_file, index=False)
                 st.success("ডেটা আপডেট হয়েছে")
-        elif table_option == "রো ডিলিট":
-            to_delete = st.multiselect("ডিলিট করতে চান এমন রো নির্বাচন করুন", sales_df.index)
+        else:
+            to_delete = st.multiselect("ডিলিট করতে চান এমন রো", sales_df.index)
             if st.button("ডিলিট করুন"):
                 sales_df = sales_df.drop(to_delete)
                 sales_df.to_csv(sales_file, index=False)
